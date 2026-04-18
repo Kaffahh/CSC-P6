@@ -1,0 +1,17 @@
+{
+  "name": "management-mahasiswa",
+  "version": "1.0.0",
+  "description": "",
+  "license": "ISC",
+  "author": "nugie",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "tailwind": "npx @tailwindcss/cli -i ./public/style/input.css -o ./public/style/output.css --watch"
+  },
+  "dependencies": {
+    "@tailwindcss/cli": "^4.2.2",
+    "tailwindcss": "^4.2.2"
+  }
+}
