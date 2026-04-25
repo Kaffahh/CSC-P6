@@ -1,26 +1,28 @@
 <?php
 session_start();
+require __DIR__ . '/../db.php';
 
 if (!isset($_SESSION['login']) || $_SESSION['login'] !== true) {
     header('Location: ../login.php');
     exit();
 }
 
-if (!isset($_SESSION['mahasiswa'])) {
-    $_SESSION['mahasiswa'] = [];
-}
-
 $studentId = isset($_GET['id']) ? (int) $_GET['id'] : (int) ($_POST['id'] ?? -1);
 
-if (!isset($_SESSION['mahasiswa'][$studentId])) {
+$existingStudent = dbOne(
+    'SELECT id, avatar FROM mahasiswa WHERE id = :id LIMIT 1',
+    [':id' => $studentId]
+);
+
+if ($existingStudent === null) {
     header('Location: ../index.php');
     exit();
 }
 
 $nama = trim($_POST['fullName'] ?? '');
 $nim = trim($_POST['nim'] ?? '');
-$jurusan = trim($_POST['jurusan'] ?? '');
-$avatar = $_SESSION['mahasiswa'][$studentId]['avatar'] ?? $nama;
+$prodiId = (int) ($_POST['prodi_id'] ?? 0);
+$avatar = $existingStudent['avatar'] ?? $nama;
 
 if (isset($_FILES['fileUpload']) && $_FILES['fileUpload']['error'] === UPLOAD_ERR_OK) {
     $uploadDirectory = __DIR__ . '/../public/images/uploads/';
@@ -42,11 +44,19 @@ if (isset($_FILES['fileUpload']) && $_FILES['fileUpload']['error'] === UPLOAD_ER
     }
 }
 
-if ($nama !== '' && $nim !== '' && $jurusan !== '') {
-    $_SESSION['mahasiswa'][$studentId]['nama'] = $nama;
-    $_SESSION['mahasiswa'][$studentId]['nim'] = $nim;
-    $_SESSION['mahasiswa'][$studentId]['jurusan'] = $jurusan;
-    $_SESSION['mahasiswa'][$studentId]['avatar'] = $avatar;
+if ($nama !== '' && $nim !== '' && $prodiId > 0) {
+    dbExecute(
+        'UPDATE mahasiswa
+         SET nama = :nama, nim = :nim, prodi_id = :prodi_id, avatar = :avatar
+         WHERE id = :id',
+        [
+            ':nama' => $nama,
+            ':nim' => $nim,
+            ':prodi_id' => $prodiId,
+            ':avatar' => $avatar,
+            ':id' => $studentId,
+        ]
+    );
 }
 
 header('Location: ../index.php');

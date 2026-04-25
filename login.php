@@ -1,10 +1,21 @@
 <?php
 session_start();
+require __DIR__ . '/db.php';
+
+$error = "";
 
 if ((!isset($_SESSION['login']) || $_SESSION['login'] !== true) && isset($_COOKIE['remember_login'])) {
-    if ($_COOKIE['remember_login'] === 'Kapa') {
-        $_SESSION['login'] = true;
-        $_SESSION['username_login'] = 'Kapa';
+    try {
+        $rememberUser = dbOne('SELECT id, username FROM users WHERE username = :username LIMIT 1', [
+            ':username' => $_COOKIE['remember_login'],
+        ]);
+
+        if ($rememberUser !== null) {
+            $_SESSION['login'] = true;
+            $_SESSION['username_login'] = $rememberUser['username'];
+        }
+    } catch (Throwable $exception) {
+        $error = 'Database belum siap. Jalankan SQL setup terlebih dahulu.';
     }
 }
 
@@ -12,23 +23,37 @@ if(isset($_SESSION['login']) && $_SESSION['login'] == true){
     header('Location: index.php');
     exit();
 }
-$error = "";
 
 if($_SERVER['REQUEST_METHOD' ] == "POST"){
-    if($_POST['username' ] == "Kapa" && $_POST['password' ] == "kapa" ){
-        $_SESSION['login' ] = true;
-        $_SESSION['username_login' ] = 'Kapa';
+    $username = trim($_POST['username'] ?? '');
+    $password = (string) ($_POST['password'] ?? '');
 
-        if (isset($_POST['remember'])) {
-            setcookie('remember_login', 'Kapa', time() + (60 * 60 * 24 * 30), '/');
-        } else {
-            setcookie('remember_login', '', time() - 3600, '/');
+    try {
+        $user = dbOne('SELECT id, username, password FROM users WHERE username = :username LIMIT 1', [
+            ':username' => $username,
+        ]);
+
+        $isPasswordValid = $user !== null && (
+            password_verify($password, $user['password']) || hash_equals($user['password'], $password)
+        );
+
+        if ($isPasswordValid) {
+            $_SESSION['login'] = true;
+            $_SESSION['username_login'] = $user['username'];
+
+            if (isset($_POST['remember'])) {
+                setcookie('remember_login', $user['username'], time() + (60 * 60 * 24 * 30), '/');
+            } else {
+                setcookie('remember_login', '', time() - 3600, '/');
+            }
+
+            header('Location: index.php');
+            exit();
         }
 
-        header('Location: index.php');
-        exit();
-    }else{
         $error = "Login gagal!";
+    } catch (Throwable $exception) {
+        $error = 'Database belum siap. Jalankan SQL setup terlebih dahulu.';
     }
 }
 ?>

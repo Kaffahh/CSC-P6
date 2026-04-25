@@ -1,5 +1,6 @@
 <?php
 session_start();
+require __DIR__ . '/../db.php';
 
 if (!isset($_SESSION['login']) || $_SESSION['login'] !== true) {
     header('Location: ../login.php');
@@ -8,7 +9,7 @@ if (!isset($_SESSION['login']) || $_SESSION['login'] !== true) {
 
 $nama = trim($_POST['fullName'] ?? '');
 $nim = trim($_POST['nim'] ?? '');
-$jurusan = trim($_POST['jurusan'] ?? '');
+$prodiId = (int) ($_POST['prodi_id'] ?? 0);
 $avatar = $nama;
 
 if (isset($_FILES['fileUpload']) && $_FILES['fileUpload']['error'] === UPLOAD_ERR_OK) {
@@ -31,17 +32,16 @@ if (isset($_FILES['fileUpload']) && $_FILES['fileUpload']['error'] === UPLOAD_ER
     }
 }
 
-if (!isset($_SESSION['mahasiswa'])) {
-    $_SESSION['mahasiswa'] = [];
-}
-
-if ($nama !== '' && $nim !== '' && $jurusan !== '') {
-    $_SESSION['mahasiswa'][] = [
-        'nama' => $nama,
-        'nim' => $nim,
-        'jurusan' => $jurusan,
-        'avatar' => $avatar,
-    ];
+if ($nama !== '' && $nim !== '' && $prodiId > 0) {
+    dbExecute(
+        'INSERT INTO mahasiswa (nama, nim, prodi_id, avatar) VALUES (:nama, :nim, :prodi_id, :avatar)',
+        [
+            ':nama' => $nama,
+            ':nim' => $nim,
+            ':prodi_id' => $prodiId,
+            ':avatar' => $avatar,
+        ]
+    );
 }
 
 header('Location: ../index.php');

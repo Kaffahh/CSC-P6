@@ -1,20 +1,16 @@
 <?php
 session_start();
+require __DIR__ . '/../db.php';
 
 if (!isset($_SESSION['login']) || $_SESSION['login'] !== true) {
 	header('Location: ../login.php');
 	exit();
 }
 
-if (!isset($_SESSION['mahasiswa'])) {
-	$_SESSION['mahasiswa'] = [];
-}
-
 $studentId = isset($_GET['id']) ? (int) $_GET['id'] : -1;
 
-if (isset($_SESSION['mahasiswa'][$studentId])) {
-	unset($_SESSION['mahasiswa'][$studentId]);
-	$_SESSION['mahasiswa'] = array_values($_SESSION['mahasiswa']);
+if ($studentId > 0) {
+	dbExecute('DELETE FROM mahasiswa WHERE id = :id', [':id' => $studentId]);
 }
 
 header('Location: ../index.php');

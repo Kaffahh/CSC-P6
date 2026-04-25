@@ -1,10 +1,13 @@
 <?php
 session_start();
+require __DIR__ . '/db.php';
 
 if (!isset($_SESSION['login']) || $_SESSION['login'] !== true) {
     header('Location: login.php');
     exit();
 }
+
+$prodiList = dbQuery('SELECT id, nama FROM prodi ORDER BY nama ASC');
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -62,10 +65,11 @@ if (!isset($_SESSION['login']) || $_SESSION['login'] !== true) {
                         </div>
                         <div class="space-y-2 md:col-span-2">
                             <label class="text-sm font-bold text-slate-700 ml-1">Jurusan</label>
-                            <select name="jurusan" class="w-full px-5 py-4 rounded-2xl bg-slate-50 border-none focus:ring-4 focus:ring-slate-500/10 outline-none transition-all appearance-none cursor-pointer">
+                            <select name="prodi_id" class="w-full px-5 py-4 rounded-2xl bg-slate-50 border-none focus:ring-4 focus:ring-slate-500/10 outline-none transition-all appearance-none cursor-pointer">
                                 <option value="">Pilih Jurusan</option>
-                                <option>Teknik Informatika</option>
-                                <option>Sistem Informasi</option>
+                                <?php foreach ($prodiList as $prodi): ?>
+                                    <option value="<?= (int) $prodi['id'] ?>"><?= htmlspecialchars($prodi['nama'], ENT_QUOTES, 'UTF-8') ?></option>
+                                <?php endforeach; ?>
                             </select>
                         </div>
                     </div>

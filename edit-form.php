@@ -1,23 +1,23 @@
 <?php
 session_start();
+require __DIR__ . '/db.php';
 
 if (!isset($_SESSION['login']) || $_SESSION['login'] !== true) {
     header('Location: login.php');
     exit();
 }
 
-if (!isset($_SESSION['mahasiswa'])) {
-    $_SESSION['mahasiswa'] = [];
-}
-
 $studentId = isset($_GET['id']) ? (int) $_GET['id'] : (int) ($_POST['id'] ?? -1);
+$currentStudent = dbOne(
+    'SELECT id, nama, nim, prodi_id, avatar FROM mahasiswa WHERE id = :id LIMIT 1',
+    [':id' => $studentId]
+);
+$prodiList = dbQuery('SELECT id, nama FROM prodi ORDER BY nama ASC');
 
-if (!isset($_SESSION['mahasiswa'][$studentId])) {
+if ($currentStudent === null) {
     header('Location: index.php');
     exit();
 }
-
-$currentStudent = $_SESSION['mahasiswa'][$studentId];
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -67,9 +67,13 @@ $currentStudent = $_SESSION['mahasiswa'][$studentId];
                         </div>
                         <div class="space-y-2 md:col-span-2">
                             <label class="text-sm font-bold text-slate-700 ml-1">Jurusan</label>
-                            <select name="jurusan" class="w-full px-5 py-4 rounded-2xl bg-slate-50 border-none focus:ring-4 focus:ring-slate-500/10 outline-none transition-all appearance-none cursor-pointer">
-                                <option <?= $currentStudent['jurusan'] === 'Teknik Informatika' ? 'selected' : '' ?>>Teknik Informatika</option>
-                                <option <?= $currentStudent['jurusan'] === 'Sistem Informasi' ? 'selected' : '' ?>>Sistem Informasi</option>
+                            <select name="prodi_id" class="w-full px-5 py-4 rounded-2xl bg-slate-50 border-none focus:ring-4 focus:ring-slate-500/10 outline-none transition-all appearance-none cursor-pointer">
+                                <option value="">Pilih Jurusan</option>
+                                <?php foreach ($prodiList as $prodi): ?>
+                                    <option value="<?= (int) $prodi['id'] ?>" <?= (int) $currentStudent['prodi_id'] === (int) $prodi['id'] ? 'selected' : '' ?>>
+                                        <?= htmlspecialchars($prodi['nama'], ENT_QUOTES, 'UTF-8') ?>
+                                    </option>
+                                <?php endforeach; ?>
                             </select>
                         </div>
                     </div>
